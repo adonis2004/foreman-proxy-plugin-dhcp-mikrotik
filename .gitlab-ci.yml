@@ -1,0 +1,130 @@
+stages:
+  - test
+  - package
+  - release
+
+variables:
+  BUNDLE_PATH: vendor/bundle
+  BUNDLE_JOBS: "4"
+  BUNDLE_RETRY: "3"
+  SMART_PROXY_PATH: "$CI_PROJECT_DIR/tmp/smart-proxy-source"
+  RELEASE_ARTIFACT_DIR: "$CI_PROJECT_DIR/pkg/artifacts"
+
+cache:
+  paths:
+    - vendor/bundle
+
+test:
+  stage: test
+  image: ruby:3.0
+  before_script:
+    - mkdir -p tmp
+    - git clone --branch 3.17.1 --depth 1 https://github.com/theforeman/smart-proxy.git tmp/smart-proxy-source
+  script:
+    - bundle install
+    - bundle exec rake test
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - vendor/bundle
+
+build_gem:
+  stage: package
+  image: ruby:3.0
+  needs:
+    - test
+  script:
+    - gem build smart_proxy_dhcp_mikrotik.gemspec
+    - mkdir -p "$RELEASE_ARTIFACT_DIR"
+    - mv smart_proxy_dhcp_mikrotik-*.gem "$RELEASE_ARTIFACT_DIR/"
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - pkg/artifacts/*.gem
+
+build_deb:
+  stage: package
+  image: ruby:3.0
+  needs:
+    - test
+  before_script:
+    - apt-get update
+    - apt-get install -y build-essential debhelper dpkg-dev
+  script:
+    - chmod +x debian/rules
+    - dpkg-buildpackage -us -uc -b
+    - mkdir -p "$RELEASE_ARTIFACT_DIR"
+    - cp ../*.deb "$RELEASE_ARTIFACT_DIR/"
+    - cp ../*.changes "$RELEASE_ARTIFACT_DIR/" || true
+    - cp ../*.buildinfo "$RELEASE_ARTIFACT_DIR/" || true
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - pkg/artifacts/*.deb
+      - pkg/artifacts/*.changes
+      - pkg/artifacts/*.buildinfo
+
+release_gitlab:
+  stage: release
+  image: ruby:3.0
+  needs:
+    - build_gem
+    - build_deb
+  rules:
+    - if: '$CI_COMMIT_TAG'
+  script:
+    - |
+      ruby <<'RUBY'
+      require 'net/http'
+      require 'json'
+      require 'uri'
+
+      project_id = ENV.fetch('CI_PROJECT_ID')
+      api_v4 = ENV.fetch('CI_API_V4_URL')
+      project_url = ENV.fetch('CI_PROJECT_URL')
+      tag = ENV.fetch('CI_COMMIT_TAG')
+      token = ENV.fetch('CI_JOB_TOKEN')
+
+      files = Dir['pkg/artifacts/*'].select { |f| File.file?(f) }
+      raise 'No release artifacts found in pkg/artifacts' if files.empty?
+
+      package_name = 'foreman-proxy-plugin-dhcp-mikrotik'
+      uploads = files.map do |file|
+        basename = File.basename(file)
+        upload_uri = URI("#{api_v4}/projects/#{project_id}/packages/generic/#{package_name}/#{tag}/#{basename}")
+        req = Net::HTTP::Put.new(upload_uri)
+        req['JOB-TOKEN'] = token
+        req.body = File.binread(file)
+        req.content_type = 'application/octet-stream'
+        res = Net::HTTP.start(upload_uri.host, upload_uri.port, use_ssl: upload_uri.scheme == 'https') do |http|
+          http.request(req)
+        end
+        unless res.is_a?(Net::HTTPSuccess) || res.code.to_i == 201
+          raise "Failed to upload #{basename}: #{res.code} #{res.body}"
+        end
+        {
+          name: basename,
+          url: "#{project_url}/-/packages/generic/#{package_name}/#{tag}/#{basename}"
+        }
+      end
+
+      release_uri = URI("#{api_v4}/projects/#{project_id}/releases")
+      req = Net::HTTP::Post.new(release_uri)
+      req['JOB-TOKEN'] = token
+      req.content_type = 'application/json'
+      req.body = {
+        name: tag,
+        tag_name: tag,
+        description: "Release #{tag}",
+        assets: { links: uploads }
+      }.to_json
+
+      res = Net::HTTP.start(release_uri.host, release_uri.port, use_ssl: release_uri.scheme == 'https') do |http|
+        http.request(req)
+      end
+
+      unless res.is_a?(Net::HTTPSuccess) || res.code.to_i == 201
+        raise "Failed to create release: #{res.code} #{res.body}"
+      end
+      RUBY

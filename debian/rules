@@ -1,0 +1,11 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	install -d debian/foreman-proxy-plugin-dhcp-mikrotik/usr/share/rubygems-integration/all/specifications
+	install -m 0644 debian/smart_proxy_dhcp_mikrotik.gemspec.stub debian/foreman-proxy-plugin-dhcp-mikrotik/usr/share/rubygems-integration/all/specifications/smart_proxy_dhcp_mikrotik-0.1.1.gemspec
+
+override_dh_auto_test:
+	@echo "Skipping dh_auto_test; use bundle exec rake test in the source tree."

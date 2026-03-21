@@ -1,0 +1,5 @@
+lib usr/share/rubygems-integration/all/gems/smart_proxy_dhcp_mikrotik-0.1.1
+config usr/share/rubygems-integration/all/gems/smart_proxy_dhcp_mikrotik-0.1.1
+README.md usr/share/rubygems-integration/all/gems/smart_proxy_dhcp_mikrotik-0.1.1
+debian/dhcp_mikrotik.rb usr/share/foreman-proxy/bundler.d
+config/settings.d/dhcp_mikrotik.yml.example etc/foreman-proxy/settings.d

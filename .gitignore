@@ -1,0 +1,14 @@
+*.gem
+*.deb
+*.buildinfo
+*.changes
+*.dsc
+*.tar.*
+pkg/artifacts/
+tmp/
+vendor/bundle/
+.bundle/
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/foreman-proxy-plugin-dhcp-mikrotik/

@@ -1,0 +1,33 @@
+# -*- encoding: utf-8 -*-
+# stub: smart_proxy_dhcp_mikrotik 0.1.1 ruby lib
+
+Gem::Specification.new do |s|
+  s.name = "smart_proxy_dhcp_mikrotik".freeze
+  s.version = "0.1.1"
+
+  s.required_rubygems_version = Gem::Requirement.new(">= 0".freeze) if s.respond_to? :required_rubygems_version=
+  s.require_paths = ["lib".freeze]
+  s.authors = ["adonis2004".freeze]
+  s.date = "2026-03-21"
+  s.description = "A Foreman Smart Proxy DHCP provider for Mikrotik RouterOS.".freeze
+  s.email = ["serbanadonis@gmail.com".freeze]
+  s.homepage = "https://github.com/adonis2004/foreman-proxy-plugin-dhcp-mikrotik".freeze
+  s.licenses = ["GPL-3.0-or-later".freeze]
+  s.required_ruby_version = Gem::Requirement.new(">= 3.0".freeze)
+  s.rubygems_version = "3.3.5".freeze
+  s.summary = "Foreman Smart Proxy provider: DHCP Mikrotik".freeze
+
+  s.installed_by_version = "3.3.5" if s.respond_to? :installed_by_version
+
+  if s.respond_to? :specification_version
+    s.specification_version = 4
+  end
+
+  # The distro foreman-proxy package is not exposed as a RubyGems "smart_proxy"
+  # gem, so production compatibility is enforced at the Debian package level.
+  if s.respond_to? :add_runtime_dependency
+    s.add_runtime_dependency(%q<net-ssh>.freeze, [%q|>= 6.1|.freeze, %q|< 8.0|.freeze])
+  else
+    s.add_dependency(%q<net-ssh>.freeze, [%q|>= 6.1|.freeze, %q|< 8.0|.freeze])
+  end
+end

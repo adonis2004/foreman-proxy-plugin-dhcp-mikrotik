@@ -1,0 +1,22 @@
+Source: foreman-proxy-plugin-dhcp-mikrotik
+Section: admin
+Priority: optional
+Maintainer: adonis2004 <serbanadonis@gmail.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+Homepage: https://github.com/adonis2004/foreman-proxy-plugin-dhcp-mikrotik
+
+Package: foreman-proxy-plugin-dhcp-mikrotik
+Architecture: all
+Depends:
+ foreman-proxy (>= 3.17.1),
+ foreman-proxy (<< 3.17.2),
+ ruby-net-ssh,
+ ${misc:Depends}
+Description: Foreman Smart Proxy DHCP Mikrotik plugin
+ DHCP provider plugin for Foreman Smart Proxy using Mikrotik RouterOS.
+ .
+ The package installs the plugin into the Smart Proxy application tree and
+ enables loading through a bundler.d hook, without requiring gem installation
+ steps on the production host.

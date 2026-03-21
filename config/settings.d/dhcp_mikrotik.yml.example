@@ -1,0 +1,20 @@
+---
+# Mikrotik DHCP provider configuration
+
+# Enable/disable and provider selection live in dhcp.yml:
+# :enabled: false
+# :use_provider: dhcp_mikrotik
+# :server: 192.0.2.1
+#
+# Note: this provider talks to RouterOS over SSH, so :port defaults to 22.
+#:host: 192.0.2.1
+#:port: 22
+#:username: admin
+#:password: secret
+
+# List of DHCP server names configured on Mikrotik to manage
+# Example: ["dhcp1", "branch-dhcp"]
+#:servers: []
+
+# Minutes to keep recently-allocated IPs blacklisted from reuse
+#:blacklist_duration_minutes: 1800

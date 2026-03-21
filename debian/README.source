@@ -1,0 +1,11 @@
+This package is intended for production Smart Proxy deployments on Debian or
+Ubuntu systems that already provide the required Foreman packages.
+
+Build example:
+
+  dpkg-buildpackage -us -uc -b
+
+Runtime compatibility assumes:
+
+  * foreman-proxy 3.17.1 series
+  * ruby-net-ssh available from the target distribution or Foreman repository

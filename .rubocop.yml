@@ -1,0 +1,57 @@
+inherit_mode:
+  merge:
+    - Exclude
+
+AllCops:
+  NewCops: disable
+  TargetRubyVersion: 3.0
+
+Layout/EndOfLine:
+  EnforcedStyle: lf
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+Metrics/MethodLength:
+  Enabled: false
+Metrics/ClassLength:
+  Enabled: false
+Metrics/CyclomaticComplexity:
+  Enabled: false
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Layout/LineLength:
+  Max: 130
+
+Style/NestedTernaryOperator:
+  Enabled: false
+
+Style/IfInsideElse:
+  Enabled: false
+
+Style/TernaryParentheses:
+  Enabled: false
+
+Gemspec/RequiredRubyVersion:
+  Enabled: true
+
+Layout/EmptyLineAfterGuardClause:
+  Enabled: false
+
+Style/FormatString:
+  Enabled: false
+
+Style/GuardClause:
+  Enabled: false
+
+Naming/MethodParameterName:
+  Enabled: false
+
+Metrics/ParameterLists:
+  Enabled: false
