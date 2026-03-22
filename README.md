@@ -5,6 +5,8 @@ Foreman Smart Proxy DHCP provider plugin for Mikrotik RouterOS.
 This plugin adds a `dhcp_mikrotik` provider to Smart Proxy and manages
 RouterOS DHCP networks, reservations, and leases over SSH.
 
+For a full operator, maintainer, and packaging guide, see `MANUAL.md`.
+
 ## Compatibility
 
 - Smart Proxy `3.17.x`
