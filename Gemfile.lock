@@ -1,5 +1,12 @@
 PATH
-  remote: ../../smart-proxy
+  remote: .
+  specs:
+    smart_proxy_dhcp_mikrotik (0.1.1)
+      net-ssh (>= 6.1, < 8.0)
+      smart_proxy (>= 3.17.0, < 3.18)
+
+PATH
+  remote: d:/proj/TheForeman/smart-proxy
   specs:
     smart_proxy (3.17.1)
       base64
@@ -11,13 +18,6 @@ PATH
       sd_notify (~> 0.1)
       sinatra (~> 2.0)
       webrick (~> 1.0)
-
-PATH
-  remote: .
-  specs:
-    smart_proxy_dhcp_mikrotik (0.1.1)
-      net-ssh (>= 6.1, < 8.0)
-      smart_proxy (= 3.17.1)
 
 GEM
   remote: https://rubygems.org/

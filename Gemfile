@@ -11,13 +11,13 @@ smart_proxy_path = File.expand_path('../../smart-proxy', __dir__) if smart_proxy
 if File.directory?(smart_proxy_path)
   gem 'smart_proxy', path: smart_proxy_path
 else
-  raise "smart-proxy source not found. Set SMART_PROXY_PATH or place the checkout at ../../smart-proxy"
+  raise 'smart-proxy source not found. Set SMART_PROXY_PATH or place the checkout at ../../smart-proxy'
 end
 
 # Development & linting
 group :development, :test do
+  gem 'mocha'
   gem 'rake'
   gem 'rubocop', require: false
   gem 'test-unit'
-  gem 'mocha'
 end

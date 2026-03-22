@@ -25,10 +25,12 @@ module Proxy
 
         def test_subnets_honor_managed_subnet_filter
           client = mock('client')
-          client.expects(:list_networks).returns([
-            { network: '1.1.1.0', netmask: '255.255.255.0', options: {} },
-            { network: '2.2.2.0', netmask: '255.255.255.0', options: {} }
-          ])
+          client.expects(:list_networks).returns(
+            [
+              { network: '1.1.1.0', netmask: '255.255.255.0', options: {} },
+              { network: '2.2.2.0', netmask: '255.255.255.0', options: {} }
+            ]
+          )
 
           prov = Provider.new('router', client, nil, ['2.2.2.0/255.255.255.0'], nil)
           prov.stubs(:logger).returns(stub(debug: nil, info: nil, warn: nil, error: nil))

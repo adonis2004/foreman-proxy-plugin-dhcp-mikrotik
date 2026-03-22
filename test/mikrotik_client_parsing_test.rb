@@ -7,65 +7,134 @@ module Proxy
     module Mikrotik
       class MikrotikClientParsingTest < Test::Unit::TestCase
         def build_client
-          PluginConfiguration::MikrotikClient.new('h', 22, 'u', 'p', false, [], false)
+          PluginConfiguration::MikrotikClient.new('h', 22, 'u', 'p', false, [], debug_dump: false)
         end
 
         def test_cidr_to_mask
-          c = build_client
-          assert_equal '255.255.255.0', c.send(:cidr_to_mask, 24)
-          assert_equal '255.255.0.0', c.send(:cidr_to_mask, 16)
-          assert_equal '255.255.255.255', c.send(:cidr_to_mask, 32)
-          assert_equal '0.0.0.0', c.send(:cidr_to_mask, 0)
+          client = build_client
+
+          assert_equal '255.255.255.0', client.send(:cidr_to_mask, 24)
+          assert_equal '255.255.0.0', client.send(:cidr_to_mask, 16)
+          assert_equal '255.255.255.255', client.send(:cidr_to_mask, 32)
+          assert_equal '0.0.0.0', client.send(:cidr_to_mask, 0)
         end
 
         def test_parse_records_and_networks
-          c = build_client
+          client = build_client
           text = <<~OUT
-            0 name=default address=1.1.1.0/24 gateway=1.1.1.1 dns-server=1.1.1.1 boot-file-name=pxelinux.0 next-server=10.0.0.1
+            0 name=default address=1.1.1.0/24 gateway=1.1.1.1 dns-server=1.1.1.1,1.1.1.2 domain=example.test boot-file-name=pxelinux.0 next-server=10.0.0.1
             1 name=other address=2.2.2.0/24
           OUT
-          c.stubs(:logger).returns(stub(debug: nil, info: nil, warn: nil, error: nil))
-          nets = c.send(:parse_networks, text)
-          assert_equal 2, nets.size
-          n0 = nets[0]
-          assert_equal '1.1.1.0', n0[:network]
-          assert_equal '255.255.255.0', n0[:netmask]
-          assert_equal 'pxelinux.0', n0[:options][:filename]
-          assert_equal '10.0.0.1', n0[:options][:nextServer]
+
+          client.stubs(:logger).returns(stub(debug: nil, info: nil, warn: nil, error: nil))
+          networks = client.send(:parse_networks, text)
+
+          assert_equal 2, networks.size
+          network = networks.first
+          assert_equal '1.1.1.0', network[:network]
+          assert_equal '255.255.255.0', network[:netmask]
+          assert_equal ['1.1.1.1'], network[:options][:routers]
+          assert_equal ['1.1.1.1', '1.1.1.2'], network[:options][:domain_name_servers]
+          assert_equal 'example.test', network[:options][:domain_name]
+          assert_equal 'pxelinux.0', network[:options][:filename]
+          assert_equal '10.0.0.1', network[:options][:nextServer]
         end
 
         def test_server_for_ip_selection
-          c = build_client
-          # Stub list_networks and list_servers
-          c.stubs(:list_networks).returns([
-            { network: '1.1.1.0', netmask: '255.255.255.0', server: 'srvA' },
-            { network: '2.2.2.0', netmask: '255.255.255.0' }
-          ])
-          c.stubs(:list_servers).returns(%w[srvA srvB])
+          client = build_client
+          client.stubs(:list_networks).returns(
+            [
+              { network: '1.1.1.0', netmask: '255.255.255.0', server: 'srvA' },
+              { network: '2.2.2.0', netmask: '255.255.255.0' }
+            ]
+          )
+          client.stubs(:list_servers).returns(%w[srvA srvB])
 
-          assert_equal 'srvA', c.send(:server_for_ip, '1.1.1.10')
-          # No per-network server, fall back to single? list has 2 -> nil without configured servers
-          c.stubs(:list_networks).returns([
-            { network: '2.2.2.0', netmask: '255.255.255.0' }
-          ])
-          c.stubs(:list_servers).returns(['onlyOne'])
-          assert_equal 'onlyOne', c.send(:server_for_ip, '2.2.2.10')
+          assert_equal 'srvA', client.send(:server_for_ip, '1.1.1.10')
+
+          client.stubs(:list_networks).returns(
+            [
+              { network: '2.2.2.0', netmask: '255.255.255.0' }
+            ]
+          )
+          client.stubs(:list_servers).returns(['onlyOne'])
+          assert_equal 'onlyOne', client.send(:server_for_ip, '2.2.2.10')
         end
 
         def test_ensure_option_set_builds_names
-          c = build_client
-          # Prevent SSH calls; just assert helper build path calls
-          c.stubs(:option_exists?).returns(false)
-          c.stubs(:option_set_exists?).returns(false)
+          client = build_client
+          client.stubs(:option_exists?).returns(false)
+          client.stubs(:option_set_exists?).returns(false)
+
           captured = []
-          c.stubs(:ssh).with do |args|
+          client.stubs(:ssh).with do |args|
             captured << args.join(' ')
             true
           end
-          name = c.send(:ensure_pxe_option_set, nextServer: '10.1.1.1', filename: 'pxelinux.0')
-          assert_match(/^pxe-10\.1\.1\.1-pxelinux\.0$/, name)
+
+          name = client.send(:ensure_option_set_for_options, { nextServer: '10.1.1.1', filename: 'pxelinux.0' }, 'host01')
+          assert_match(/^mtik-set-/, name)
           assert(captured.any? { |cmd| cmd.include?('/ip dhcp-server option add') })
           assert(captured.any? { |cmd| cmd.include?('/ip dhcp-server option-set add') })
+        end
+
+        def test_option_definitions_include_routeros_encodings_for_supported_options
+          client = build_client
+          definitions = client.send(:option_definitions_for, {
+                                      hostname: 'host01',
+                                      nextServer: '10.1.1.1',
+                                      filename: 'ztp.cfg/HOST.cfg',
+                                      ztp_vendor: 'huawei',
+                                      ztp_firmware: { core: 'images/firmware.cc', web: 'images/web.7z' }
+                                    }, 'host01')
+
+          codes = definitions.map { |definition| definition[:code] }
+          assert_includes codes, 12
+          assert_includes codes, 66
+          assert_includes codes, 67
+          assert_includes codes, 143
+          assert_includes codes, 150
+        end
+
+        def test_option_definitions_build_sunw_vendor_payload
+          client = build_client
+          definitions = client.send(:option_definitions_for, {
+                                      '<SPARC-Enterprise-T5120>root_server_ip' => '192.168.122.24',
+                                      '<SPARC-Enterprise-T5120>install_path' => '/Solaris/install'
+                                    }, 'host01')
+
+          vendor_definition = definitions.find { |definition| definition[:code] == 43 }
+          assert_not_nil vendor_definition
+          assert_match(/^0x/i, vendor_definition[:value])
+        end
+
+        def test_invalid_vendor_options_raise_clear_error
+          client = build_client
+
+          error = assert_raise(::Proxy::DHCP::Error) do
+            client.send(:option_definitions_for, { '<Some-Vendor>mystery_option' => 'value' }, 'host01')
+          end
+
+          assert_match(/Unsupported vendor options/, error.message)
+        end
+
+        def test_custom_known_hosts_file_is_applied_to_ssh_options
+          client = PluginConfiguration::MikrotikClient.new(
+            'h',
+            22,
+            'u',
+            'p',
+            false,
+            [],
+            debug_dump: false,
+            host_key_verification: 'always',
+            known_hosts_file: '/tmp/known_hosts'
+          )
+          options = client.send(:ssh_options)
+
+          assert_equal :always, options[:verify_host_key]
+          assert_equal ['/tmp/known_hosts'], options[:user_known_hosts_file]
+          assert_equal [], options[:global_known_hosts_file]
         end
       end
     end

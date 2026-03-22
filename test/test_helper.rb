@@ -14,6 +14,4 @@ require 'dhcp_mikrotik/plugin_configuration'
 
 # Minimal SETTINGS stub for logging in tests
 require 'ostruct'
-if !defined?(Proxy::SETTINGS)
-	Proxy::SETTINGS = OpenStruct.new(log_level: 'INFO', log_buffer: 2000, log_buffer_errors: 1000)
-end
+Proxy::SETTINGS ||= OpenStruct.new(log_level: 'INFO', log_buffer: 2000, log_buffer_errors: 1000)

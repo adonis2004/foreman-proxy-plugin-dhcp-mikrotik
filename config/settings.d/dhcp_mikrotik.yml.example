@@ -16,5 +16,12 @@
 # Example: ["dhcp1", "branch-dhcp"]
 #:servers: []
 
+# SSH host key verification policy for RouterOS connections.
+# Valid values: accept_new, always, never, accept_new_or_local_tunnel
+#:host_key_verification: accept_new
+
+# Optional custom known_hosts file for RouterOS SSH host keys
+#:known_hosts_file: /etc/foreman-proxy/mikrotik_known_hosts
+
 # Minutes to keep recently-allocated IPs blacklisted from reuse
 #:blacklist_duration_minutes: 1800

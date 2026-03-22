@@ -6,18 +6,19 @@ module Proxy
       class Plugin < ::Proxy::Provider
         plugin :dhcp_mikrotik, '0.1.1'
 
-    capability 'dhcp_filename_ipv4'
-    capability 'dhcp_filename_hostname'
+        capability 'dhcp_filename_ipv4'
+        capability 'dhcp_filename_hostname'
 
-    requires :dhcp, '>= 0'
+        requires :dhcp, '>= 0'
 
-    default_settings blacklist_duration_minutes: 30 * 60,
-                     mikrotik_debug_dump: false
+        default_settings blacklist_duration_minutes: 30 * 60,
+                         mikrotik_debug_dump: false,
+                         host_key_verification: 'accept_new'
 
-    load_classes 'Proxy::DHCP::Mikrotik::PluginConfiguration'
-    load_dependency_injection_wirings 'Proxy::DHCP::Mikrotik::PluginConfiguration'
+        load_classes 'Proxy::DHCP::Mikrotik::PluginConfiguration'
+        load_dependency_injection_wirings 'Proxy::DHCP::Mikrotik::PluginConfiguration'
 
-    start_services :free_ips
+        start_services :free_ips
       end
     end
   end

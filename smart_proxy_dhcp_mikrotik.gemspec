@@ -15,8 +15,8 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.required_ruby_version = '>= 3.0'
-  spec.add_dependency 'smart_proxy', '= 3.17.1'
   spec.add_dependency 'net-ssh', '>= 6.1', '< 8.0'
+  spec.add_dependency 'smart_proxy', '>= 3.17.0', '< 3.18'
 
   # Test files are not packaged by default; Rake will run them from the repo
 

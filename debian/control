@@ -10,8 +10,8 @@ Homepage: https://github.com/adonis2004/foreman-proxy-plugin-dhcp-mikrotik
 Package: foreman-proxy-plugin-dhcp-mikrotik
 Architecture: all
 Depends:
- foreman-proxy (>= 3.17.1),
- foreman-proxy (<< 3.17.2),
+ foreman-proxy (>= 3.17),
+ foreman-proxy (<< 3.18),
  ruby-net-ssh,
  ${misc:Depends}
 Description: Foreman Smart Proxy DHCP Mikrotik plugin
